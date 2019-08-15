@@ -7,6 +7,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class BaseValidatorTest
@@ -41,5 +42,22 @@ public class BaseValidatorTest
 
     protected String path(String filename) {
         return "src/test/resources/fasta/" + filename;
+    }
+
+    /**
+     * Run code with simple benchmark
+     * @param codeToBeValidated code to be run
+     */
+    public static void simpleBenchmark(Runnable codeToBeValidated){
+        long start = System.nanoTime();
+        long beforeUsedMem=Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory();
+
+        codeToBeValidated.run();
+
+        long afterUsedMem=Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory();
+        long timeTaken = System.nanoTime() - start;
+        System.out.println("Time Taken : " +
+                TimeUnit.MILLISECONDS.convert((timeTaken), TimeUnit.NANOSECONDS));
+        System.out.print("Memory Used : " + (afterUsedMem-beforeUsedMem));
     }
 }

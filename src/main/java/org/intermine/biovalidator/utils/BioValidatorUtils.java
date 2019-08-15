@@ -94,6 +94,9 @@ public final class BioValidatorUtils
      * @return boolean, whether given string an integer or not
      */
     public static boolean isInteger(String s) {
+        if (s == null) {
+            return false;
+        }
         final int radix = 10;
         if (s.isEmpty()) {
             return false;
@@ -124,5 +127,28 @@ public final class BioValidatorUtils
             return false;
         }
         return BOOLEAN_TRUE.equalsIgnoreCase(s) || BOOLEAN_FALSE.equalsIgnoreCase(s);
+    }
+
+    /**
+     * Test whether a string contains whitespace or not, this function uses
+     * Character.isWhitespace to check whitespace.
+     * Example:
+     *      containsWhitespace(null)      = false
+     *      containsWhitespace("string")  = false
+     *      containsWhitespace("str ing") = true
+     * @param s input string
+     * @return true if string contains whitespace
+     */
+    public static boolean containsWhitespace(String s) {
+        if (s == null) {
+            return false;
+        }
+        int len = s.length();
+        for (int i = 0; i < len; i++) {
+            if (Character.isWhitespace(s.charAt(i))) {
+                return true;
+            }
+        }
+        return false;
     }
 }

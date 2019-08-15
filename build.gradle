@@ -46,6 +46,9 @@ dependencies {
     // https://mvnrepository.com/artifact/org.apache.commons/commons-text
     compile group: 'org.apache.commons', name: 'commons-text', version: '1.7'
 
+    // https://mvnrepository.com/artifact/com.github.samtools/htsjdk
+    compile group: 'com.github.samtools', name: 'htsjdk', version: '2.20.1'
+
 }
 
 task myJavadocs(type: Javadoc) {
