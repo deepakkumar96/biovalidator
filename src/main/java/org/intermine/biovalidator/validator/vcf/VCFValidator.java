@@ -35,6 +35,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import static org.intermine.biovalidator.parser.vcf.VCFDataParser.VCF_HEADER_LINE;
+
 /**
  * VCF validator
  * @author deepak kumar
@@ -72,7 +74,7 @@ public class VCFValidator extends AbstractValidator
     public ValidationResult validate() {
         try ( InputStreamReader isr = new FileReader(fileToBeValidated);
               VCFDataParser vcfDataParser = new VCFDataParser(isr)) {
-            //verifyHeaderFormats();
+            verifyHeaderFormats();
             header = VCFHeaderReader.readHeaderFrom(new SeekableFileStream(fileToBeValidated));
 
             long currentLineNumber = vcfDataParser.getHeadersLinesCount();
@@ -88,6 +90,7 @@ public class VCFValidator extends AbstractValidator
                 vcfLineOpt = vcfDataParser.parseNext();
                 currentLineNumber++;
             }
+            System.out.println("Total Lines: " + currentLineNumber);
         } catch (IOException e) {
             validationResult.addError(ErrorMessage.of(e.getMessage()));
         }
@@ -109,9 +112,9 @@ public class VCFValidator extends AbstractValidator
             if (currentLinePOSFieldValue < lastReadPosFiledValue) {
                 String errMsg = "Positions must be sorted numerically, in increasing order,"
                         + " but not sorted at line " + currentLineNumber;
-                //validationResult.addError(errMsg);
+                //validationResult.addError(errMsg); // TODO whether to use this rule or not
                 if (validationResultStrategy.shouldStopAtFirstError()) {
-                    return;
+                    //return; //todo
                 }
             }
             lastReadPosFiledValue = currentLinePOSFieldValue;
@@ -123,7 +126,7 @@ public class VCFValidator extends AbstractValidator
         }
 
         //validating ID
-        if (!StringUtils.equals(vcfDataLine.getId(), MISSING_VALUE)) {
+       /* if (!StringUtils.equals(vcfDataLine.getId(), MISSING_VALUE)) {
             boolean isAdded = uniqueIDs.add(vcfDataLine.getId());
             if (!isAdded) {
                 validationResult.addError("Identifier(ID) is duplicated at line "
@@ -132,12 +135,12 @@ public class VCFValidator extends AbstractValidator
                     return;
                 }
             }
-        }
+        }*/
 
         //validating REF
         if (!StringUtils.containsOnly(vcfDataLine.getRef(), VALID_REF_VALUES)) {
-            validationResult.addError("REF base is required and  must be one of A,C,G,T,N"
-                    + " (case insensitive) at line " + currentLineNumber);
+            validationResult.addError("REF base is required and must be one of A,C,G,T,N "
+                   + "(case insensitive), but contains whitespace(s) at line " + currentLineNumber);
             if (validationResultStrategy.shouldStopAtFirstError()) {
                 return;
             }
@@ -148,16 +151,56 @@ public class VCFValidator extends AbstractValidator
             if (BioValidatorUtils.containsWhitespace(alt)) {
                 validationResult.addError(ErrorMessage.of("alternate base(ALT) has a whitespace"
                         + " at line " + currentLineNumber));
+                if (validationResultStrategy.shouldStopAtFirstError()) {
+                    return;
+                }
             }
             if (isNotAngleBracketWrappedString(alt)
                     && !StringUtils.containsOnly(alt, VALID_ALT_VALUES)) {
                 validationResult.addError("ALT can be either angle-bracket string or"
                         + " can only contain one of A,C,G,T,N,* at line " + currentLineNumber);
+                if (validationResultStrategy.shouldStopAtFirstError()) {
+                    return;
+                }
             }
+        }
+
+        // validating QUAL
+        if (!StringUtils.equals(vcfDataLine.getQual(), MISSING_VALUE)
+                && !BioValidatorUtils.isInteger(vcfDataLine.getQual())) {
+            validationResult.addError("QUAL can either be missing value '.' or a numeric"
+                    + " value at line " + currentLineNumber);
             if (validationResultStrategy.shouldStopAtFirstError()) {
                 return;
             }
         }
+
+        // validate FILTER
+        if (BioValidatorUtils.containsWhitespace(vcfDataLine.getFilter())) {
+            validationResult.addError("FILTER must not contain any"
+                    + "whitespace, at line " + currentLineNumber);
+            if (validationResultStrategy.shouldStopAtFirstError()) {
+                return;
+            }
+        }
+
+        //validate INFO
+        if (BioValidatorUtils.containsWhitespace(vcfDataLine.getInfo())) {
+            validationResult.addError("INFO must not contain any"
+                    + "whitespace, at line " + currentLineNumber);
+        }
+
+        /*//validating ID
+        if (!StringUtils.equals(vcfDataLine.getId(), MISSING_VALUE)) {
+            boolean isAdded = uniqueIDs.add(vcfDataLine.getId());
+            if (!isAdded) {
+                validationResult.addError("Identifier(ID) is duplicated at line "
+                        + currentLineNumber);
+                if (validationResultStrategy.shouldStopAtFirstError()) {
+                    return;
+                }
+            }
+        }*/
 
     }
 
@@ -166,8 +209,8 @@ public class VCFValidator extends AbstractValidator
               Parser<String> lineParser = new GenericLineByLineParser(isr)) {
             String line = lineParser.parseNext();
             long currentLineNumber = 1;
-            while (line != null) {
-                /*if ( currentLineNumber == 1 && !line.startsWith(HEADER_START)) {
+            while (line != null && line.startsWith("#") && !line.startsWith(VCF_HEADER_LINE)) {
+                if ( currentLineNumber == 1 && !line.startsWith(HEADER_START)) {
                     validationResult.addError("First line must be a VCF header line");
                     return;
                 }
@@ -177,7 +220,7 @@ public class VCFValidator extends AbstractValidator
                             && validationResultStrategy.shouldStopAtFirstError()) {
                         return;
                     }
-                }*/
+                }
                 line = lineParser.parseNext();
                 currentLineNumber++;
             }

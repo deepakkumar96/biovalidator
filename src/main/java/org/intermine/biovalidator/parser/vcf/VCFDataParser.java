@@ -26,7 +26,7 @@ import java.util.Optional;
  */
 public class VCFDataParser implements Parser<Optional<VCFLine>>
 {
-    private static final String VCF_HEADER_LINE = "#CHROM";
+    public static final String VCF_HEADER_LINE = "#CHROM";
     private Parser<String> lineByLineParser;
     private long headersLinesCount;
 

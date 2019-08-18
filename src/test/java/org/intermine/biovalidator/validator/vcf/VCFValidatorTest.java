@@ -15,8 +15,8 @@ import java.io.IOException;
 @Ignore
 public class VCFValidatorTest extends BaseValidatorTest {
 
-    String mediumSizedFile = "/home/deepak/Documents/Intermine/FILES/VCF/mus_musculus_structural_variations.vcf";
-    String bigSizedFile = "/home/deepak/Documents/Intermine/FILES/VCF/danio_rerio_incl_consequences.vcf";
+    private String mediumSizedFile = "/home/deepak/Documents/Intermine/FILES/VCF/mus_musculus_structural_variations.vcf";
+    private String bigSizedFile = "/home/deepak/Documents/Intermine/FILES/VCF/danio_rerio_incl_consequences.vcf";
 
     @Test
     public void testVCF() {
@@ -41,7 +41,7 @@ public class VCFValidatorTest extends BaseValidatorTest {
     public void testVCFParser() {
         simpleBenchmark(() -> {
             try {
-                Parser<String> parser = new GenericLineByLineParser(new FileReader(bigSizedFile));
+                Parser<String> parser = new GenericLineByLineParser(new FileReader(mediumSizedFile));
                 String line = parser.parseNext();
                 long currentLine = 1;
                 while (line != null) {
