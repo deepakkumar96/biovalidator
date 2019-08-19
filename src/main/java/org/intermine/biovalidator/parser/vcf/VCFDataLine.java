@@ -9,7 +9,8 @@ package org.intermine.biovalidator.parser.vcf;
  * information or http://www.gnu.org/copyleft/lesser.html.
  *
  */
-import java.util.List;
+
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Represents a VCF file data line
@@ -25,23 +26,38 @@ public class VCFDataLine implements VCFLine
     private String qual;
     private String filter;
     private String info;
-
-    private List<String> samples;
+    private String format;
 
     /**
-     * Construct a VCFDataLine with all the required parametersw
+     * Construct a VCFDataLine with all the required parameters without FORMAT column
      * @param chrom chromosome value
      * @param pos the reference position
      * @param id identifier:  Semi-colon separated list of unique identifiers where available
      * @param ref reference base(s
-     * @param alt lternate base(s)
+     * @param alt alternate base(s)
      * @param qual quality
      * @param filter filter status
      * @param info additional information
-     * @param samples additional samples
      */
     public VCFDataLine(String chrom, String pos, String id, String ref, String alt, String qual,
-                       String filter, String info, List<String> samples) {
+                       String filter, String info) {
+        this(chrom, pos, id, ref, alt, qual, filter, info, StringUtils.EMPTY);
+    }
+
+    /**
+     * Construct a VCFDataLine with all the required parameters and FORMAT
+     * @param chrom chromosome value
+     * @param pos the reference position
+     * @param id identifier:  Semi-colon separated list of unique identifiers where available
+     * @param ref reference base(s
+     * @param alt alternate base(s)
+     * @param qual quality
+     * @param filter filter status
+     * @param info additional information
+     * @param format vcf format
+     */
+    public VCFDataLine(String chrom, String pos, String id, String ref, String alt, String qual,
+                       String filter, String info, String format) {
         this.chrom = chrom;
         this.pos = pos;
         this.id = id;
@@ -50,7 +66,7 @@ public class VCFDataLine implements VCFLine
         this.qual = qual;
         this.filter = filter;
         this.info = info;
-        this.samples = samples;
+        this.format = format;
     }
 
     @Override
@@ -64,7 +80,6 @@ public class VCFDataLine implements VCFLine
                 + ", qual='" + qual + '\''
                 + ", filter='" + filter + '\''
                 + ", info='" + info + '\''
-                + ", samples=" + samples
                 + '}';
     }
 
@@ -141,11 +156,11 @@ public class VCFDataLine implements VCFLine
     }
 
     /**
-     * Gets samples
+     * Gets format
      *
-     * @return value of samples
+     * @return value of format
      */
-    public List<String> getSamples() {
-        return samples;
+    public String getFormat() {
+        return format;
     }
 }

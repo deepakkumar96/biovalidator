@@ -62,10 +62,10 @@ public class VCFValidator extends AbstractValidator
 
     /**
      * Construct a VCF validator with a filename
-     * @param filename file to be validated
+     * @param file file to be validated
      */
-    public VCFValidator(String filename) {
-        fileToBeValidated = new File(filename);
+    public VCFValidator(File file) {
+        fileToBeValidated = file;
         uniqueIDs = new HashSet<>();
         lastReadPosFiledValue = 0;
     }
@@ -75,8 +75,11 @@ public class VCFValidator extends AbstractValidator
         try ( InputStreamReader isr = new FileReader(fileToBeValidated);
               VCFDataParser vcfDataParser = new VCFDataParser(isr)) {
             verifyHeaderFormats();
+            if (validationResult.isNotValid()
+                    && validationResultStrategy.shouldStopAtFirstError()) {
+                return validationResult;
+            }
             header = VCFHeaderReader.readHeaderFrom(new SeekableFileStream(fileToBeValidated));
-
             long currentLineNumber = vcfDataParser.getHeadersLinesCount();
             Optional<VCFLine> vcfLineOpt = vcfDataParser.parseNext();
             currentLineNumber++; // as first line is read above
@@ -90,7 +93,6 @@ public class VCFValidator extends AbstractValidator
                 vcfLineOpt = vcfDataParser.parseNext();
                 currentLineNumber++;
             }
-            System.out.println("Total Lines: " + currentLineNumber);
         } catch (IOException e) {
             validationResult.addError(ErrorMessage.of(e.getMessage()));
         }
@@ -100,7 +102,7 @@ public class VCFValidator extends AbstractValidator
     private void validateVCFDataLine(VCFDataLine vcfDataLine, long currentLineNumber) {
         String chrom = vcfDataLine.getChrom();
         if (BioValidatorUtils.containsWhitespace(chrom)) {
-            validationResult.addError("ID is either missing or contains whitespace at line "
+            validationResult.addError("CHROM is either missing or contains whitespace at line "
                     + currentLineNumber);
             if (validationResultStrategy.shouldStopAtFirstError()) {
                 return;
@@ -110,11 +112,11 @@ public class VCFValidator extends AbstractValidator
         if (BioValidatorUtils.isInteger(vcfDataLine.getPos())) {
             long currentLinePOSFieldValue = Integer.parseInt(vcfDataLine.getPos());
             if (currentLinePOSFieldValue < lastReadPosFiledValue) {
-                String errMsg = "Positions must be sorted numerically, in increasing order,"
+                String errMsg = "POS (Positions) must be sorted numerically, in increasing order,"
                         + " but not sorted at line " + currentLineNumber;
-                //validationResult.addError(errMsg); // TODO whether to use this rule or not
+                validationResult.addError(errMsg); // TODO whether to use this rule or not
                 if (validationResultStrategy.shouldStopAtFirstError()) {
-                    //return; //todo
+                    return; //todo
                 }
             }
             lastReadPosFiledValue = currentLinePOSFieldValue;
@@ -125,22 +127,11 @@ public class VCFValidator extends AbstractValidator
             }
         }
 
-        //validating ID
-       /* if (!StringUtils.equals(vcfDataLine.getId(), MISSING_VALUE)) {
-            boolean isAdded = uniqueIDs.add(vcfDataLine.getId());
-            if (!isAdded) {
-                validationResult.addError("Identifier(ID) is duplicated at line "
-                        + currentLineNumber);
-                if (validationResultStrategy.shouldStopAtFirstError()) {
-                    return;
-                }
-            }
-        }*/
-
         //validating REF
         if (!StringUtils.containsOnly(vcfDataLine.getRef(), VALID_REF_VALUES)) {
             validationResult.addError("REF base is required and must be one of A,C,G,T,N "
-                   + "(case insensitive), but contains whitespace(s) at line " + currentLineNumber);
+                   + "(case insensitive), and cannot contains whitespace(s) at line "
+                   + currentLineNumber);
             if (validationResultStrategy.shouldStopAtFirstError()) {
                 return;
             }
@@ -178,7 +169,7 @@ public class VCFValidator extends AbstractValidator
         // validate FILTER
         if (BioValidatorUtils.containsWhitespace(vcfDataLine.getFilter())) {
             validationResult.addError("FILTER must not contain any"
-                    + "whitespace, at line " + currentLineNumber);
+                    + " whitespace, at line " + currentLineNumber);
             if (validationResultStrategy.shouldStopAtFirstError()) {
                 return;
             }
@@ -187,7 +178,7 @@ public class VCFValidator extends AbstractValidator
         //validate INFO
         if (BioValidatorUtils.containsWhitespace(vcfDataLine.getInfo())) {
             validationResult.addError("INFO must not contain any"
-                    + "whitespace, at line " + currentLineNumber);
+                    + " whitespace, at line " + currentLineNumber);
         }
 
         /*//validating ID

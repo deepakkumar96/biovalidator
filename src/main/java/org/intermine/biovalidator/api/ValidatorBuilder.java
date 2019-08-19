@@ -17,6 +17,7 @@ import org.intermine.biovalidator.validator.csv.CsvValidator;
 import org.intermine.biovalidator.validator.fasta.FastaValidator;
 import org.intermine.biovalidator.validator.fasta.SequenceType;
 import org.intermine.biovalidator.validator.gff3.Gff3Validator;
+import org.intermine.biovalidator.validator.vcf.VCFValidator;
 
 import javax.annotation.Nonnull;
 import java.io.File;
@@ -88,6 +89,8 @@ public final class ValidatorBuilder
                 return ofType(new Gff3Validator(reader)); // GFF3 validator for both GFF and GFF3
             case CSV:
                 return ofType(new CsvValidator(filename));
+            case VCF:
+                return ofType(new VCFValidator(filename));
             default:
                 throw new IllegalArgumentException("invalid validator type " + type.getName());
         }

@@ -17,7 +17,6 @@ import org.intermine.biovalidator.parser.GenericLineByLineParser;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Collections;
 import java.util.Optional;
 
 /**
@@ -26,9 +25,15 @@ import java.util.Optional;
  */
 public class VCFDataParser implements Parser<Optional<VCFLine>>
 {
+    /**
+     * Represents VCF HEADER LINE
+     */
     public static final String VCF_HEADER_LINE = "#CHROM";
+    private static final int LEAST_COLUMN_COUNT = 8;
     private Parser<String> lineByLineParser;
     private long headersLinesCount;
+    private int headersColumnCount;
+    private long totalDataLineRead;
 
     /**
      * Construct a VCFDataParser with input stream
@@ -38,11 +43,12 @@ public class VCFDataParser implements Parser<Optional<VCFLine>>
     public VCFDataParser(InputStreamReader inputStreamReader) throws ParsingException {
         lineByLineParser = new GenericLineByLineParser(inputStreamReader);
         headersLinesCount = 1;
+        totalDataLineRead = 0;
         readAllHeaders();
     }
 
     /**
-     * Exhaust all meta data from VCF
+     * Exhaust all meta data from VCF, so that parseNext() can return only data lines not headers.
      * @throws ParsingException if fails
      */
     private void readAllHeaders() throws ParsingException {
@@ -51,25 +57,36 @@ public class VCFDataParser implements Parser<Optional<VCFLine>>
             line = lineByLineParser.parseNext();
             headersLinesCount++;
         }
+        //count length of columns
+        if (line != null && line.startsWith(VCF_HEADER_LINE)) {
+            String[] data = StringUtils.split(line, '\t');
+            if (data != null) {
+                headersColumnCount = data.length;
+            }
+        }
+        // assign totalLines equals total headers line
+        totalDataLineRead = headersLinesCount;
     }
 
     @Override
     public Optional<VCFLine> parseNext() throws ParsingException {
+        totalDataLineRead++;
         Optional<String> currentLineOpt = Optional.ofNullable(lineByLineParser.parseNext());
         if (currentLineOpt.isPresent()) {
-            return parseVcfLine(currentLineOpt.get());
+            return Optional.of(parseVcfLine(currentLineOpt.get()));
         }
         return Optional.empty();
     }
 
-    private Optional<VCFLine> parseVcfLine(String line) {
+    private VCFLine parseVcfLine(String line) throws ParsingException {
         String[] data = StringUtils.split(line, '\t');
-        if (data.length >= 8) {
-            VCFDataLine dataLine = new VCFDataLine(data[0], data[1], data[2], data[3], data[4],
-                    data[5], data[6], data[7], Collections.emptyList());
-            return Optional.of(dataLine);
+
+        if (data.length >= LEAST_COLUMN_COUNT && data.length == headersColumnCount) {
+            return new VCFDataLine(data[0], data[1], data[2], data[3], data[4],
+                    data[5], data[6], data[7]);
+        } else {
+            throw new ParsingException("wrong number of column at line " + totalDataLineRead);
         }
-        return Optional.empty();
     }
 
     @Override

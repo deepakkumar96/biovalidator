@@ -36,7 +36,12 @@ public enum ValidatorType {
     /**
      * Represents a validator of type CSV/TSV
      */
-    CSV("csv",  Arrays.asList("csv", "tsv", "txt"));
+    CSV("csv",  Arrays.asList("csv", "tsv", "txt")),
+
+    /**
+     * Represents a validator of type VCF
+     */
+    VCF("vcf",  Collections.singletonList("vcf"));
 
     private String name;
     private List<String> supportedFileExtensions;

@@ -1,0 +1,8 @@
+##fileformat=VCFv4.0
+##INFO=<ID=DP,Number=1,Type=Integer>
+##INFO=<ID=HM2,Number=0,Type=Flag,Description="HapMap2 membership">
+##INFO=<ID=HM3,Number=0,Type=Flag,Description="HapMap3 membership">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+23	533	rs114315702	G	C	.	PAS S	AA=.;AC=6;AN=120;DP=423;GP=1:10533;BN=132
+1	41342	rs116400033	T	A	.	erer	AA=.;AC=29;AN=120;DP=188;GP=1:51479;BN=132
+1	41791	rs78732933	G	A	.	uhuhu	AA=.;AC=5;AN=120;DP=192;GP=1:51928;BN=131

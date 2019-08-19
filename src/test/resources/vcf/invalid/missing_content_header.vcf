@@ -1,0 +1,25 @@
+##fileformat=VCFv4.0
+##INFO=<ID=DP,Number=1,Type=Integer>
+##INFO=<ID=HM2,Number=0,Type=Flag,Description="HapMap2 membership">
+##INFO=<ID=HM3,Number=0,Type=Flag,Description="HapMap3 membership">
+##INFO=<ID=AA,Number=1,Type=String,Description="Ancestral Allele, ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/pilot_data/technical/reference/ancestral_alignments/README">
+##reference=human_b36_both.fasta
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read Depth">
+##FORMAT=<ID=CB,Number=1,Type=String,Description="Called by S(Sanger), M(UMich), B(BI)">
+##rsIDs=dbSNP b129 mapped to NCBI 36.3, August 10, 2009
+##INFO=<ID=2,Number=1,Type=Integer,Description="Allele count in genotypes">
+##INFO=<ID=AN,Number=1,Type=Integer,Description="Total number of alleles in called genotypes">
+##INFO=<ID=GP,Number=1,Type=String,Description="GRCh37 position(s)">
+##INFO=<ID=BN,Number=2,Type=Integer,Description="First dbSNP build #">
+##INFO=<ID=NR,Number=0,Type=Flag,Description="No dbSNP 132 map weight=1 rs number assigned to position">
+##INFO=<ID=OR,Number=1,Type=String,Description="Previous rs number">
+##INFO=<ID=MP,Number=0,Type=Flag,Description="Maps to multiple positions on GRCh37">
+1	533	rs114315702	G	C	.	PASS	AA=.;AC=6;AN=120;DP=423;GP=1:10533;BN=132
+1	41342	rs116400033	T	A	.	erer	AA=.;AC=29;AN=120;DP=188;GP=1:51479;BN=132
+1	41791	rs78732933	G	A	.	uhuhu	AA=.;AC=5;AN=120;DP=192;GP=1:51928;BN=131
+1	44449	rs114201130	T	C	.	PASS	AA=C;AC=2;AN=120;DP=166;GP=1:54586;BN=132
+1	44539	rs2462492	C	T	.	PASS	AA=T;AC=2;AN=120;DP=131;GP=1:54676;BN=100
+1	44571	rs115797567	G	C	.	PASS	AA=g;AC=7;AN=120;DP=135;GP=1:54708;BN=132
+1	45162	rs10399749	C	T	.	PASS	AA=c;AC=20;AN=120;DP=166;HM2;GP=1:55299;BN=119
+1	52066	rs28402963	T	C	.	PASS	AA=C;AC=18;AN=120;DP=159;GP=1:62203;BN=125

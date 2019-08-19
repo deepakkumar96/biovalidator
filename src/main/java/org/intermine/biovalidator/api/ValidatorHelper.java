@@ -151,7 +151,7 @@ public final class ValidatorHelper
     }
 
     /**
-     * Validate a gff3 file with a given mode(strict or permissive)
+     * Validate a csv file with a given mode(strict or permissive)
      *
      * @param file     file to be validated
      * @param isStrict whether to validate in strict mode or permissive
@@ -170,18 +170,27 @@ public final class ValidatorHelper
     }
 
     /**
-     * Validate a gff3 file with a given mode(strict or permissive)
+     * Validate a csv file with a given mode(strict or permissive)
      *
      * @param file      file to be validated
      * @param isStrict  whether to validate in strict mode or permissive
      * @param delimiter delimiter for column separator
      * @return result of validation
-     * @throws ValidationFailureException if validation failes
      */
     public static ValidationResult validateCsv(@Nonnull String file,
-                                               String delimiter, boolean isStrict)
-            throws ValidationFailureException {
+                                               String delimiter, boolean isStrict) {
         return validate(file, ValidatorType.CSV, isStrict);
+    }
+
+    /**
+     * Validate a vcf file with a given mode(strict or permissive)
+     *
+     * @param file      file to be validated
+     * @param isStrict  whether to validate in strict mode or permissive
+     * @return result of validation
+     */
+    public static ValidationResult validateVcf(@Nonnull String file, boolean isStrict) {
+        return validate(file, ValidatorType.VCF, isStrict);
     }
 
     private static ValidationResult createValidationResultWithError(String message) {
