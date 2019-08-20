@@ -30,9 +30,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 import static org.intermine.biovalidator.parser.vcf.VCFDataParser.VCF_HEADER_LINE;
@@ -55,7 +53,6 @@ public class VCFValidator extends AbstractValidator
     private static final char[] VALID_REF_VALUES = {'A', 'C', 'G', 'T', 'N' };
     private static final char[] VALID_ALT_VALUES = {'A', 'C', 'G', 'T', 'N', '*', ',' };
 
-    private final Set<String> uniqueIDs;
     private final File fileToBeValidated;
     private VCFHeader header;
     private long lastReadPosFiledValue;
@@ -66,7 +63,6 @@ public class VCFValidator extends AbstractValidator
      */
     public VCFValidator(File file) {
         fileToBeValidated = file;
-        uniqueIDs = new HashSet<>();
         lastReadPosFiledValue = 0;
     }
     @Nonnull
@@ -74,12 +70,21 @@ public class VCFValidator extends AbstractValidator
     public ValidationResult validate() {
         try ( InputStreamReader isr = new FileReader(fileToBeValidated);
               VCFDataParser vcfDataParser = new VCFDataParser(isr)) {
-            verifyHeaderFormats();
+
+            /* Validating VCF HEADERS */
+            verifyHeaderFormats(); // validates formatting of vcf header
             if (validationResult.isNotValid()
                     && validationResultStrategy.shouldStopAtFirstError()) {
                 return validationResult;
             }
+            /*
+                While 'verifyHeaderFormats()' checks formatting issues of header,
+                This checks whether the content of vcf header is valid.
+                Example: whether all required parameters of INFO meta-header is ven or not.
+             */
             header = VCFHeaderReader.readHeaderFrom(new SeekableFileStream(fileToBeValidated));
+
+            /* Validates VCF file data lines */
             long currentLineNumber = vcfDataParser.getHeadersLinesCount();
             Optional<VCFLine> vcfLineOpt = vcfDataParser.parseNext();
             currentLineNumber++; // as first line is read above
@@ -108,7 +113,10 @@ public class VCFValidator extends AbstractValidator
                 return;
             }
         }
-        //validating POS field
+        /*
+            validating POS field, checks whether POS is a numeric string all the POS values
+            are sorted in increasing order or not.
+         */
         if (BioValidatorUtils.isInteger(vcfDataLine.getPos())) {
             long currentLinePOSFieldValue = Integer.parseInt(vcfDataLine.getPos());
             if (currentLinePOSFieldValue < lastReadPosFiledValue) {
@@ -126,12 +134,22 @@ public class VCFValidator extends AbstractValidator
                 return;
             }
         }
+        validateRefAndAlt(vcfDataLine, currentLineNumber); // validate REF and ALT
+        if (validationResult.isNotValid() && validationResultStrategy.shouldStopAtFirstError()) {
+            return;
+        }
+        validateQualityFilterAndInfo(vcfDataLine, currentLineNumber); //validate QUAL, FILTER, INFO
+    }
 
+    /**
+     * Validates Reference(REF) and Alternative(ALT) base
+     */
+    private void validateRefAndAlt(VCFDataLine vcfDataLine, long currentLineNumber) {
         //validating REF
         if (!StringUtils.containsOnly(vcfDataLine.getRef(), VALID_REF_VALUES)) {
             validationResult.addError("REF base is required and must be one of A,C,G,T,N "
-                   + "(case insensitive), and cannot contains whitespace(s) at line "
-                   + currentLineNumber);
+                    + "(case insensitive), and cannot contains whitespace(s) at line "
+                    + currentLineNumber);
             if (validationResultStrategy.shouldStopAtFirstError()) {
                 return;
             }
@@ -150,12 +168,14 @@ public class VCFValidator extends AbstractValidator
                     && !StringUtils.containsOnly(alt, VALID_ALT_VALUES)) {
                 validationResult.addError("ALT can be either angle-bracket string or"
                         + " can only contain one of A,C,G,T,N,* at line " + currentLineNumber);
-                if (validationResultStrategy.shouldStopAtFirstError()) {
-                    return;
-                }
             }
         }
+    }
 
+    /**
+     * Validates QUAL, FILTER and INFO
+     */
+    private void validateQualityFilterAndInfo(VCFDataLine vcfDataLine, long currentLineNumber) {
         // validating QUAL
         if (!StringUtils.equals(vcfDataLine.getQual(), MISSING_VALUE)
                 && !BioValidatorUtils.isInteger(vcfDataLine.getQual())) {
@@ -180,21 +200,12 @@ public class VCFValidator extends AbstractValidator
             validationResult.addError("INFO must not contain any"
                     + " whitespace, at line " + currentLineNumber);
         }
-
-        /*//validating ID
-        if (!StringUtils.equals(vcfDataLine.getId(), MISSING_VALUE)) {
-            boolean isAdded = uniqueIDs.add(vcfDataLine.getId());
-            if (!isAdded) {
-                validationResult.addError("Identifier(ID) is duplicated at line "
-                        + currentLineNumber);
-                if (validationResultStrategy.shouldStopAtFirstError()) {
-                    return;
-                }
-            }
-        }*/
-
     }
 
+    /**
+     * This iterates over VCF headers of the given file and hecks for issues related
+     * to formatting of VCF headers, but not the actual content of VCF headers
+     */
     private void verifyHeaderFormats() {
         try ( InputStreamReader isr = new FileReader(fileToBeValidated);
               Parser<String> lineParser = new GenericLineByLineParser(isr)) {
@@ -206,7 +217,7 @@ public class VCFValidator extends AbstractValidator
                     return;
                 }
                 if (StringUtils.startsWithAny(line, META_HEADER)) {
-                    checkIsWrappedWithinAngleBracketed(line.trim(), currentLineNumber);
+                    checkIsKeyValueAndWrappedWithinAngleBracketed(line.trim(), currentLineNumber);
                     if (validationResult.isNotValid()
                             && validationResultStrategy.shouldStopAtFirstError()) {
                         return;
@@ -220,7 +231,13 @@ public class VCFValidator extends AbstractValidator
         }
     }
 
-    private boolean checkIsWrappedWithinAngleBracketed(String line, long currentLineNumber) {
+    /**
+     * Checks whether a given string is key-value pair or not and and value is wrapped inside
+     * opening('<') and closing('>') brackets or not. if not then it add errors to
+     * validation result and return false.
+     */
+    private boolean checkIsKeyValueAndWrappedWithinAngleBracketed(String line,
+                                                                  long currentLineNumber) {
         int equalIndex = line.indexOf("=<");
         if (equalIndex < 0) {
             String errMsg = "A META header must be a key-value pair at line " + currentLineNumber;
@@ -237,6 +254,12 @@ public class VCFValidator extends AbstractValidator
         return true;
     }
 
+    /**
+     * Test whether a string starts opening angle bracket('<') and ends with closing angle
+     * bracket('>') or not.
+     * @param s string to be tested
+     * @return true if string is start with '<' and ends with '>'
+     */
     private boolean isAngleBracketWrappedString(String s) {
         if (s == null) {
             return false;

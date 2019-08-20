@@ -20,7 +20,8 @@ import java.io.InputStreamReader;
 import java.util.Optional;
 
 /**
- * VCF Data parser
+ * VCF Data parser, this parser skips VCF headers and read only VCF file data lines,
+ * So calling parseNext() will return the first data line of the VCF file.
  * @author deepak kumar
  */
 public class VCFDataParser implements Parser<Optional<VCFLine>>
@@ -48,7 +49,8 @@ public class VCFDataParser implements Parser<Optional<VCFLine>>
     }
 
     /**
-     * Exhaust all meta data from VCF, so that parseNext() can return only data lines not headers.
+     * Exhaust or skip all meta data from VCF, so that parseNext() can return only data
+     * lines not headers.
      * @throws ParsingException if fails
      */
     private void readAllHeaders() throws ParsingException {
