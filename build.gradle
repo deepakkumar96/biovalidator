@@ -16,6 +16,7 @@ plugins {
     id 'checkstyle'
     id 'maven'
     id 'com.jfrog.bintray' version "1.8.0"
+    id "me.champeau.gradle.jmh" version "0.4.8"
 }
 
 group 'org.intermine'
@@ -45,6 +46,13 @@ dependencies {
 
     // https://mvnrepository.com/artifact/org.apache.commons/commons-text
     compile group: 'org.apache.commons', name: 'commons-text', version: '1.7'
+
+    // https://mvnrepository.com/artifact/org.openjdk.jmh/jmh-core
+    compile group: 'org.openjdk.jmh', name: 'jmh-core', version: '1.21'
+
+    // https://mvnrepository.com/artifact/org.openjdk.jmh/jmh-generator-annprocess
+    testCompile group: 'org.openjdk.jmh', name: 'jmh-generator-annprocess', version: '1.21'
+
 
 }
 
