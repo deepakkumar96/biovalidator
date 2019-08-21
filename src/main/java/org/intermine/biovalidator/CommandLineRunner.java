@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Command Line Runner for 'biovalidator'
@@ -42,10 +43,12 @@ final class CommandLineRunner
     private static final String FASTA_DOC_FILE_NAME = "Fasta-Validator.md";
     private static final String GFF3_DOC_FILE_NAME = "GFF3-Validator.md";
     private static final String CSV_DOC_FILE_NAME = "Csv-Validator.md";
+    private static final String VCF_DOC_FILE_NAME = "Vcf-Validator.md";
     private static final String FASTA = "fasta";
     private static final String GFF = "gff";
     private static final String GFF3 = "gff3";
     private static final String CSV = "csv";
+    private static final String VCF = "vcf";
 
     static {
         WRITER = new PrintWriter(System.out, true);
@@ -59,8 +62,9 @@ final class CommandLineRunner
     public static void main(String[] args) {
 
         /*args = Arrays.asList("-f",
-        "/home/deepak/Documents/Intermine/FILES/CSV/Drosophila_2.na25.annot.csv",
-        "-w").toArray(new String[]{});*/
+        "/home/deepak/Documents/Intermine/FILES/VCF/mus_musculus_structural_variations.vcf",
+                "--docs", "vcf")
+                .toArray(new String[]{});*/
 
         try {
             CommandLine commandLine = new CommandLine(new BioValidatorCommand());
@@ -161,8 +165,11 @@ final class CommandLineRunner
             filename = GFF3_DOC_FILE_NAME;
         } else if (CSV.equalsIgnoreCase(docs)) {
             filename = CSV_DOC_FILE_NAME;
+        } else if (VCF.equalsIgnoreCase(docs)) {
+            filename = VCF_DOC_FILE_NAME;
         } else {
-            WRITER.println("Invalid docs type, argument must be one of(fasta, gff, gff3 or csv)");
+            WRITER.println("Invalid docs type, argument must be one of(fasta, gff, gff3,"
+                    + " csv or vcf)");
             return;
         }
         InputStream inputStream = CommandLineRunner.class
@@ -175,7 +182,7 @@ final class CommandLineRunner
                 new InputStreamReader(inputStream))) {
             bufferedReader.lines()
                     .forEach(System.out::println);
-        } catch (IOException e) {
+        } catch (IOException | RuntimeException e) {
             WRITER.println("Unable to show documentation!");
         }
     }
@@ -210,7 +217,9 @@ final class CommandLineRunner
             /** create possible Validator
              */
             ValidatorTypes() {
-                super(Arrays.asList("", "fasta", "fasta-dna", "fasta-rna", "fasta-protein"));
+                super(Arrays.stream(ValidatorType.values())
+                        .map(ValidatorType::getName)
+                        .collect(Collectors.toList()));
             }
         }
 
@@ -218,7 +227,7 @@ final class CommandLineRunner
                 names = {"-t", "--type"},
                 description = "ValidatorType, "
                         + "possible values:\n fasta,\n fasta-dna,\n fasta-rna,\n fasta-protein,\n"
-                        + " gff3,\n csv,\n tsv,\n tab",
+                        + " gff3,\n csv,\n tsv,\n tab,\n vcf",
                 defaultValue = "",
                 completionCandidates = ValidatorTypes.class)
         private String validatorType;
